@@ -1,0 +1,89 @@
+version: '3'
+networks:
+  wordpress_network:
+    driver: overlay
+#volumes:
+#  fs-xxxxx:    
+#    driver: rexray or efs
+#    driver_opts:
+#      share: "fs-xxxxx"
+volumes:
+  mariadb-data:
+
+services:
+  varnish:
+#    build:
+#      context: ./varnish
+#      dockerfile: Dockerfile
+    image: varnish:production
+    ports:
+      - 80:80
+    networks:
+      - wordpress_network
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=VARNISHCACHE]
+      restart_policy:
+        condition: on-failure
+ 
+  webserver:
+    image: nginx:production
+    ports:
+      - 8080:80
+    networks:
+      - wordpress_network
+    volumes:
+      - ./html:/var/www/html
+#      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
+#      - ./nginx/ssl-key:/etc/nginx/ssl-key
+    deploy:
+      mode: replicated
+      replicas: 2
+      labels: [APP=WEBSERVER]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
+
+  mariadb-master:
+    image: 'bitnami/mariadb:latest'
+    environment:
+      - MARIADB_REPLICATION_MODE=master
+      - MARIADB_REPLICATION_USER=KingRepl
+      - MARIADB_REPLICATION_PASSWORD=isadnaja
+      - MARIADB_ROOT_PASSWORD=vpjkcV8d^ot0Ut
+      - MARIADB_USER=zakrified909
+      - MARIADB_PASSWORD=vpjkcV8d^ot0Ut555
+      - MARIADB_DATABASE=wpdb
+    volumes:
+      - mariadb-data:/bitnami/mariadb
+    networks:
+      - wordpress_network
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=DB-MASTER]
+      restart_policy:
+        condition: on-failure
+  mariadb-slave:
+    depends_on:
+      - mariadb-master
+    image: 'bitnami/mariadb:latest'
+    networks:
+      - wordpress_network
+    environment:
+      - MARIADB_REPLICATION_MODE=slave
+      - MARIADB_REPLICATION_USER=KingRepl
+      - MARIADB_REPLICATION_PASSWORD=isadnaja
+      - MARIADB_MASTER_HOST=mariadb-master
+      - MARIADB_MASTER_PORT_NUMBER=3306
+      - MARIADB_MASTER_ROOT_PASSWORD=vpjkcV8d^ot0Ut
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=DB-SLAVE]
+      restart_policy:
+        condition: on-failure
