@@ -87,3 +87,16 @@ services:
       labels: [APP=DB-SLAVE]
       restart_policy:
         condition: on-failure
+
+  memcached:
+    depends_on:
+      - webserver
+    image: 'memcached:1.4.38-alpine'
+    networks:
+      - wordpress_network
+    deploy:
+      mode: replicated
+      replicas: 0
+      labels: [APP=MEMCACHED]
+      restart_policy:
+        condition: on-failure
