@@ -1,4 +1,4 @@
-version: '3'
+version: '3.2'
 networks:
   wordpress_network:
     driver: overlay
@@ -17,7 +17,10 @@ services:
 #      dockerfile: Dockerfile
     image: varnish:production
     ports:
-      - 80:80
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
     networks:
       - wordpress_network
     deploy:
@@ -28,13 +31,14 @@ services:
         condition: on-failure
  
   webserver:
-    image: nginx:production
+    image: nginx:production-v4
     ports:
-      - 8080:80
+      - 8000:80
     networks:
       - wordpress_network
     volumes:
       - ./html:/var/www/html
+      - ./logs:/var/log/nginx
 #      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
 #      - ./nginx/ssl-key:/etc/nginx/ssl-key
     deploy:
@@ -45,7 +49,7 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.25'
+          cpus: '1.0'
           memory: 512M
 
   mariadb-master:
@@ -83,7 +87,7 @@ services:
       - MARIADB_MASTER_ROOT_PASSWORD=vpjkcV8d^ot0Ut
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 0
       labels: [APP=DB-SLAVE]
       restart_policy:
         condition: on-failure

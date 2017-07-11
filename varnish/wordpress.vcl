@@ -15,7 +15,7 @@ backend default {
 acl purge {
   "localhost";
   "127.0.0.1";
-  "128.199.122.66";
+  "128.199.171.222";
   "webserver";
 }
 
