@@ -200,8 +200,8 @@ sub vcl_backend_response {
   # ##########################################################
   if (!(bereq.url ~ "wp-(login|admin)") && !bereq.http.cookie ~ "wordpress_logged_in|resetpass" ) {
     unset beresp.http.set-cookie;
-    set beresp.ttl = 1w;
-    set beresp.grace =3d;
+    set beresp.ttl = 1d;
+    set beresp.grace = 1800s;
   }
 
   if (beresp.ttl <= 0s ||
