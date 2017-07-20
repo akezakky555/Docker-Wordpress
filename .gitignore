@@ -1,3 +1,5 @@
 public-content/*
 html/wp-config.php
 html/wp-content/uploads/*
+html/wp-content/cache/*
+logs/*
